@@ -1,0 +1,6 @@
+# Python 2 and 3 compiled bytecode
+*.pyc
+__pycache__
+
+# ctags output
+tags
