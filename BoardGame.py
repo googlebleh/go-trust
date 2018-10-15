@@ -36,10 +36,19 @@ class BoardGame(Animation):
         self.board[row][col] = self.getCurrentPlayer()
         self.changePlayers()
 
+    def cellClear(self, row, col):
+        print "clearing: (%d, %d)" % (row, col)
+        self.board[row][col] = 0
+
     def mousePressed(self, event):
         if (self.isOnBoard(event.x, event.y)):
             (row, col) = self.getCellFromLocation(event.x, event.y)
             self.cellPressed(row, col)
+
+    def secondaryMousePressed(self, event):
+        if (self.isOnBoard(event.x, event.y)):
+            (row, col) = self.getCellFromLocation(event.x, event.y)
+            self.cellClear(row, col)
 
     def redrawAll(self):
         self.drawTitle()

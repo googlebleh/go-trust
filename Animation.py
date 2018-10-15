@@ -30,10 +30,14 @@ class Animation(object):
         def mousePressedWrapper(event):
             self.mousePressed(event)
             redrawAllWrapper()
+        def secondaryMouseWrapper(event):
+            self.secondaryMousePressed(event)
+            redrawAllWrapper()
         def keyPressedWrapper(event):
             self.keyPressed(event)
             redrawAllWrapper()
         root.bind("<Button-1>", mousePressedWrapper)
+        root.bind("<Button-2>", secondaryMouseWrapper)
         root.bind("<Key>", keyPressedWrapper)
         # set up timerFired events
         self.timerFiredDelay = 250 # milliseconds
