@@ -4,7 +4,10 @@
 # For example, no way to win.  No score.  No reset.
 # Still, a practical example of inheritance!  :-)
 
+import os
+import pickle
 import random
+from argparse import ArgumentParser
 from Tkinter import *
 
 from Animation import Animation
@@ -23,6 +26,12 @@ def make2dList(rows, cols):
 ###########################################
 
 class BoardGame(Animation):
+    backup_fname = "go_board.pickle"
+
+    def keyPressed(self, event):
+        if event.keysym == "s":
+            self.save()
+
     def getCurrentPlayer(self):
         return self.currentPlayer
 
@@ -30,7 +39,7 @@ class BoardGame(Animation):
         self.currentPlayer += 1
         if (self.currentPlayer > self.totalPlayers):
             self.currentPlayer = 1
-    
+
     def cellPressed(self, row, col):
         print "cell pressed: (%d, %d)" % (row, col)
         self.board[row][col] = self.getCurrentPlayer()
@@ -70,7 +79,7 @@ class BoardGame(Animation):
 
     def drawCell(self, row, col):
         (x0, y0, x1, y1) = self.getCellBounds(row, col)
-        self.canvas.create_rectangle(x0, y0, x1, y1, fill=self.cellBorderColor)                
+        self.canvas.create_rectangle(x0, y0, x1, y1, fill=self.cellBorderColor)
         self.drawCellContents(row, col, self.getCellContentsBounds(row, col))
 
     def drawCellContents(self, row, col, bounds):
@@ -94,7 +103,7 @@ class BoardGame(Animation):
             assert(-1 < value < len(self.cellColors))
             return self.cellColors[value]
         else:
-            raise Exception("Unknown board value: %r" % value)        
+            raise Exception("Unknown board value: %r" % value)
 
     def isOnBoard(self, x, y):
         (boardX0, boardY0, boardX1, boardY1) = self.getBoardBounds()
@@ -106,7 +115,7 @@ class BoardGame(Animation):
         row = (y - boardY0) / self.cellSize
         col = (x - boardX0) / self.cellSize
         return (row, col)
-        
+
     def getBoardBounds(self):
         boardX0 = self.boardMargin
         boardX1 = self.width - self.boardMargin
@@ -126,7 +135,7 @@ class BoardGame(Animation):
         (cellX0, cellY0, cellX1, cellY1) = self.getCellBounds(row, col)
         cm = self.cellMargin
         return (cellX0+cm, cellY0+cm, cellX1-cm, cellY1-cm)
- 
+
     def __init__(self, title, rows, cols, cellSize=30):
         self.title = title
         self.rows = rows
@@ -151,6 +160,25 @@ class BoardGame(Animation):
         height = (self.rows * self.cellSize) + self.titleMargin + 2*self.boardMargin
         super(BoardGame, self).run(width, height)
 
+    def save(self):
+        save_fname = BoardGame.backup_fname
+
+        # keep previous game state; helpful for viewing last move
+        if os.path.isfile(save_fname):
+            fmt = "backup existing save file {} --> {}"
+            backup_save_fname = save_fname + ".bak"
+            print fmt.format(save_fname, backup_save_fname)
+            os.rename(save_fname, backup_save_fname)
+
+        print "saving board state to", save_fname
+        with open(save_fname, "wb") as f:
+            # protocol 2 to support Python >= 2.3
+            pickle.dump(self.board, f, protocol=2)
+
+    def load(self):
+        with open(BoardGame.backup_fname, "rb") as f:
+            self.board = pickle.load(f)
+
 ###########################################
 # BoardGameTest class (to test BoardGame)
 ###########################################
@@ -164,6 +192,15 @@ class BoardGameTest(BoardGame):
         self.board[2][2] = 1
         self.board[3][3] = 2
 
+def getargs():
+    ap = ArgumentParser("A Barebones Go game")
+    ap.add_argument("-r", "--restore", help="restore game state from file")
+    return ap.parse_args()
+
 if (__name__ == "__main__"):
+    args = getargs()
+
     game = BoardGameTest(10, 15)
+    if args.restore:
+        game.load()
     game.run()
