@@ -8,7 +8,7 @@ import os
 import pickle
 import random
 from argparse import ArgumentParser
-from Tkinter import *
+from tkinter import *
 
 from Animation import Animation
 
@@ -18,7 +18,7 @@ from Animation import Animation
 
 def make2dList(rows, cols):
     a=[]
-    for row in xrange(rows): a += [[0]*cols]
+    for row in range(rows): a += [[0]*cols]
     return a
 
 ###########################################
@@ -41,12 +41,12 @@ class BoardGame(Animation):
             self.currentPlayer = 1
 
     def cellPressed(self, row, col):
-        print "cell pressed: (%d, %d)" % (row, col)
+        print("cell pressed: (%d, %d)" % (row, col))
         self.board[row][col] = self.getCurrentPlayer()
         self.changePlayers()
 
     def cellClear(self, row, col):
-        print "clearing: (%d, %d)" % (row, col)
+        print("clearing: (%d, %d)" % (row, col))
         self.board[row][col] = 0
 
     def mousePressed(self, event):
@@ -65,16 +65,16 @@ class BoardGame(Animation):
         self.drawBoard()
 
     def drawTitle(self):
-        self.canvas.create_text(self.width/2, self.titleMargin/2, text=self.title, font=self.titleFont, fill=self.titleFill)
+        self.canvas.create_text(self.width//2, self.titleMargin//2, text=self.title, font=self.titleFont, fill=self.titleFill)
         self.canvas.create_line(0, self.titleMargin, self.width, self.titleMargin, fill=self.titleFill)
 
     def drawPlayersTurn(self):
         msg = "Player %d's turn" % self.currentPlayer
-        self.canvas.create_text(self.boardMargin, self.titleMargin/2, text=msg, font=self.playersTurnFont, anchor=W)
+        self.canvas.create_text(self.boardMargin, self.titleMargin//2, text=msg, font=self.playersTurnFont, anchor=W)
 
     def drawBoard(self):
-        for row in xrange(self.rows):
-            for col in xrange(self.cols):
+        for row in range(self.rows):
+            for col in range(self.cols):
                 self.drawCell(row, col)
 
     def drawCell(self, row, col):
@@ -88,7 +88,7 @@ class BoardGame(Animation):
         color = self.getCellColor(row, col)
         if (color != None):
             if (self.fillCellsWithCircles == True):
-                (cx, cy) = ((x0+x1)/2, (y0+y1)/2)
+                (cx, cy) = ((x0+x1)//2, (y0+y1)//2)
                 r = int(0.4*self.cellSize)
                 self.canvas.create_oval(cx-r, cy-r, cx+r, cy+r, fill=color)
             else:
@@ -112,8 +112,8 @@ class BoardGame(Animation):
 
     def getCellFromLocation(self, x, y):
         (boardX0, boardY0, boardX1, boardY1) = self.getBoardBounds()
-        row = (y - boardY0) / self.cellSize
-        col = (x - boardX0) / self.cellSize
+        row = (y - boardY0) // self.cellSize
+        col = (x - boardX0) // self.cellSize
         return (row, col)
 
     def getBoardBounds(self):
@@ -167,10 +167,10 @@ class BoardGame(Animation):
         if os.path.isfile(save_fname):
             fmt = "backup existing save file {} --> {}"
             backup_save_fname = save_fname + ".bak"
-            print fmt.format(save_fname, backup_save_fname)
+            print(fmt.format(save_fname, backup_save_fname))
             os.rename(save_fname, backup_save_fname)
 
-        print "saving board state to", save_fname
+        print("saving board state to", save_fname)
         with open(save_fname, "wb") as f:
             # protocol 2 to support Python >= 2.3
             pickle.dump(self.board, f, protocol=2)

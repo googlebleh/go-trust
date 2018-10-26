@@ -1,7 +1,7 @@
 # Animation.py
 
 import random
-from Tkinter import *
+from tkinter import *
 
 ###########################################
 # Animation class
