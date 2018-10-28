@@ -26,12 +26,6 @@ def make2dList(rows, cols):
 ###########################################
 
 class BoardGame(Animation):
-    backup_fname = "go_board.pickle"
-
-    def keyPressed(self, event):
-        if event.keysym == "s":
-            self.save()
-
     def getCurrentPlayer(self):
         return self.currentPlayer
 
@@ -160,8 +154,27 @@ class BoardGame(Animation):
         height = (self.rows * self.cellSize) + self.titleMargin + 2*self.boardMargin
         super(BoardGame, self).run(width, height)
 
+###########################################
+# GoTrust class
+###########################################
+
+class GoTrust(BoardGame):
+    backup_fname = "go_board.pickle"
+
+    def __init__(self, rows, cols, cellSize=30):
+        title = "Board Game Test"
+        super(GoTrust, self).__init__(title, rows, cols, cellSize)
+        self.board[0][0] = "red"
+        self.board[1][1] = 0
+        self.board[2][2] = 1
+        self.board[3][3] = 2
+
+    def keyPressed(self, event):
+        if event.keysym == "s":
+            self.save()
+
     def save(self):
-        save_fname = BoardGame.backup_fname
+        save_fname = GoTrust.backup_fname
 
         # keep previous game state; helpful for viewing last move
         if os.path.isfile(save_fname):
@@ -176,21 +189,8 @@ class BoardGame(Animation):
             pickle.dump(self.board, f, protocol=2)
 
     def load(self):
-        with open(BoardGame.backup_fname, "rb") as f:
+        with open(GoTrust.backup_fname, "rb") as f:
             self.board = pickle.load(f)
-
-###########################################
-# BoardGameTest class (to test BoardGame)
-###########################################
-
-class BoardGameTest(BoardGame):
-    def __init__(self, rows, cols, cellSize=30):
-        title = "Board Game Test"
-        super(BoardGameTest, self).__init__(title, rows, cols, cellSize)
-        self.board[0][0] = "red"
-        self.board[1][1] = 0
-        self.board[2][2] = 1
-        self.board[3][3] = 2
 
 def getargs():
     ap = ArgumentParser("A Barebones Go game")
@@ -200,7 +200,7 @@ def getargs():
 if (__name__ == "__main__"):
     args = getargs()
 
-    game = BoardGameTest(10, 15)
+    game = GoTrust(10, 15)
     if args.restore:
         game.load()
     game.run()
