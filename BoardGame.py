@@ -187,12 +187,13 @@ class GoTrust(BoardGame):
             print(fmt.format(save_fname, backup_save_fname))
             os.rename(save_fname, backup_save_fname)
 
-        print("saving board state to", save_fname)
+        print("saving board state to", save_fname),
         with open(save_fname, "wb") as f:
             # protocol 2 to support Python >= 2.3
             pickle.dump(self.board, f, protocol=2)
 
         self.board_sync.upload()
+        print('Finished.')
 
     def load(self):
         self.board_sync.download()
