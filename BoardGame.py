@@ -8,9 +8,11 @@ import os
 import pickle
 import random
 from argparse import ArgumentParser
+from configparser import ConfigParser
 from tkinter import *
 
 from Animation import Animation
+from sync_file import WebDAVFsync
 
 ###########################################
 # Utility functions
@@ -161,13 +163,15 @@ class BoardGame(Animation):
 class GoTrust(BoardGame):
     backup_fname = "go_board.pickle"
 
-    def __init__(self, rows, cols, cellSize=30):
+    def __init__(self, rows, cols, url, user, pass_):
         title = "Board Game Test"
+        cellSize=30
         super(GoTrust, self).__init__(title, rows, cols, cellSize)
         self.board[0][0] = "red"
         self.board[1][1] = 0
         self.board[2][2] = 1
         self.board[3][3] = 2
+        self.board_sync = WebDAVFsync(url, GoTrust.backup_fname, user, pass_)
 
     def keyPressed(self, event):
         if event.keysym == "s":
@@ -188,19 +192,34 @@ class GoTrust(BoardGame):
             # protocol 2 to support Python >= 2.3
             pickle.dump(self.board, f, protocol=2)
 
+        self.board_sync.upload()
+
     def load(self):
+        self.board_sync.download()
+
         with open(GoTrust.backup_fname, "rb") as f:
             self.board = pickle.load(f)
 
 def getargs():
     ap = ArgumentParser("A Barebones Go game")
-    ap.add_argument("-r", "--restore", help="restore game state from file")
+    ap.add_argument("--config", default="config.ini",
+                    help="config file path")
+    ap.add_argument("-r", "--restore", action="store_true",
+                    help="restore game state from network")
     return ap.parse_args()
 
 if (__name__ == "__main__"):
     args = getargs()
 
-    game = GoTrust(10, 15)
+    cfg = ConfigParser()
+    cfg.read(args.config)
+
+    sync_url = cfg["sync"]["URL"]
+    sync_user = cfg["sync"]["Username"]
+    sync_pass = cfg["sync"]["Password"]
+
+    game = GoTrust(10, 15, url=sync_url, user=sync_user, pass_=sync_pass)
+
     if args.restore:
         game.load()
     game.run()
