@@ -22,9 +22,9 @@ class WebDAVFsync:
         put_req = urllib.request.Request(
             url=self.url,
             data=file_data,
+            headers={"Authorization": "Basic {}".format(self.auth_b64)},
             method="PUT",
         )
-        put_req.add_header("Authorization", "Basic {}".format(self.auth_b64))
         with urllib.request.urlopen(put_req) as url_req:
             pass
 
@@ -33,9 +33,9 @@ class WebDAVFsync:
     def download(self):
         get_req = urllib.request.Request(
             url=self.url,
+            headers={"Authorization": "Basic {}".format(self.auth_b64)},
             method="GET",
         )
-        get_req.add_header("Authorization", "Basic {}".format(self.auth_b64))
         with urllib.request.urlopen(get_req) as url_req:
             file_data = url_req.read()
 

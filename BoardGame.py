@@ -208,7 +208,7 @@ def getargs():
                     help="restore game state from network")
     return ap.parse_args()
 
-if (__name__ == "__main__"):
+if __name__ == "__main__":
     args = getargs()
 
     cfg = ConfigParser()
