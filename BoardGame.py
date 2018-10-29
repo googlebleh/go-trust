@@ -163,8 +163,8 @@ class BoardGame(Animation):
 class GoTrust(BoardGame):
     backup_fname = "go_board.pickle"
 
-    def __init__(self, rows, cols, url, user, pass_):
-        title = "Board Game Test"
+    def __init__(self, dimensions, title, url, user, pass_):
+        rows, cols = dimensions
         cellSize=30
         super(GoTrust, self).__init__(title, rows, cols, cellSize)
         self.board[0][0] = "red"
@@ -218,7 +218,13 @@ if (__name__ == "__main__"):
     sync_user = cfg["sync"]["Username"]
     sync_pass = cfg["sync"]["Password"]
 
-    game = GoTrust(10, 15, url=sync_url, user=sync_user, pass_=sync_pass)
+    game = GoTrust(
+        dimensions=(10, 10),
+        title="Go",
+        url=sync_url,
+        user=sync_user,
+        pass_=sync_pass,
+    )
 
     if args.restore:
         game.load()
