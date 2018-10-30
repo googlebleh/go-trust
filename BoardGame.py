@@ -220,7 +220,7 @@ if __name__ == "__main__":
     sync_pass = cfg["sync"]["Password"]
 
     game = GoTrust(
-        dimensions=(10, 10),
+        dimensions=(13, 13),
         title="Go",
         url=sync_url,
         user=sync_user,
