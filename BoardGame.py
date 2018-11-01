@@ -216,6 +216,9 @@ class GoTrust(BoardGame):
 
         self.board = state["board"]
         self.moves = state["moves"]
+        last_player, _, _ = self.moves[-1]
+        self.currentPlayer = last_player
+        self.changePlayers()
 
 def getargs():
     ap = ArgumentParser("A Barebones Go game")
