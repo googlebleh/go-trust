@@ -6,6 +6,7 @@
 
 import os
 import pickle
+import pprint
 import random
 from argparse import ArgumentParser
 from configparser import ConfigParser
@@ -161,7 +162,8 @@ class BoardGame(Animation):
 ###########################################
 
 class GoTrust(BoardGame):
-    backup_fname = "go_board.pickle"
+    backup_fname = "go_trust.pickle"
+    pp = pprint.PrettyPrinter(compact=True)
 
     def __init__(self, dimensions, title, url, user, pass_):
         rows, cols = dimensions
@@ -171,11 +173,22 @@ class GoTrust(BoardGame):
         self.board[1][1] = 0
         self.board[2][2] = 1
         self.board[3][3] = 2
-        self.board_sync = WebDAVFsync(url, GoTrust.backup_fname, user, pass_)
+        self.moves = [] # list of tuple(player, row, col)
+        self.game_sync = WebDAVFsync(url, GoTrust.backup_fname, user, pass_)
+
+    def cellPressed(self, row, col):
+        player = self.getCurrentPlayer()
+        self.moves.append((player, row, col))
+        super().cellPressed(row, col)
 
     def keyPressed(self, event):
         if event.keysym == "s":
             self.save()
+        elif event.keysym == "m":
+            self.print_moves()
+
+    def print_moves(self):
+        GoTrust.pp.pprint(self.moves)
 
     def save(self):
         save_fname = GoTrust.backup_fname
@@ -187,19 +200,26 @@ class GoTrust(BoardGame):
             print(fmt.format(save_fname, backup_save_fname))
             os.rename(save_fname, backup_save_fname)
 
-        print("saving board state to", save_fname),
+        print("saving game state to", save_fname),
+        state = {
+            "board": self.board,
+            "moves": self.moves,
+        }
         with open(save_fname, "wb") as f:
             # protocol 2 to support Python >= 2.3
-            pickle.dump(self.board, f, protocol=2)
+            pickle.dump(state, f, protocol=2)
 
-        self.board_sync.upload()
+        self.game_sync.upload()
         print('Finished.')
 
     def load(self):
-        self.board_sync.download()
+        self.game_sync.download()
 
         with open(GoTrust.backup_fname, "rb") as f:
-            self.board = pickle.load(f)
+            state = pickle.load(f)
+
+        self.board = state["board"]
+        self.moves = state["moves"]
 
 def getargs():
     ap = ArgumentParser("A Barebones Go game")
