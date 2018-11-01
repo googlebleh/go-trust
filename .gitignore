@@ -1,6 +1,16 @@
 # ctags output
 tags
 
+# vim
+.swp
+
+# game files
+config.ini
+go_trust.pickle
+go_trust.pickle.bak
+
+##################### random other Python-related files ######################
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
