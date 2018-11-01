@@ -177,6 +177,10 @@ class GoTrust(BoardGame):
         self.moves.append((player, row, col))
         super().cellPressed(row, col)
 
+    def cellClear(self, row, col):
+        self.moves.append((0, row, col))
+        super().cellClear(row, col)
+
     def keyPressed(self, event):
         if event.keysym == "s":
             self.save()
@@ -216,7 +220,13 @@ class GoTrust(BoardGame):
 
         self.board = state["board"]
         self.moves = state["moves"]
-        last_player, _, _ = self.moves[-1]
+
+        last_player = None
+        for player, _, _ in reversed(self.moves):
+            # find last valid player (ignore cleared cells)
+            if (1 <= player <= self.totalPlayers):
+                last_player = player
+                break
         self.currentPlayer = last_player
         self.changePlayers()
 
