@@ -167,12 +167,8 @@ class GoTrust(BoardGame):
 
     def __init__(self, dimensions, title, url, user, pass_):
         rows, cols = dimensions
-        cellSize=30
+        cellSize = 30
         super(GoTrust, self).__init__(title, rows, cols, cellSize)
-        self.board[0][0] = "red"
-        self.board[1][1] = 0
-        self.board[2][2] = 1
-        self.board[3][3] = 2
         self.moves = [] # list of tuple(player, row, col)
         self.game_sync = WebDAVFsync(url, GoTrust.backup_fname, user, pass_)
 
@@ -229,7 +225,8 @@ def getargs():
                     help="restore game state from network")
     return ap.parse_args()
 
-if __name__ == "__main__":
+
+def main():
     args = getargs()
 
     cfg = ConfigParser()
@@ -250,3 +247,7 @@ if __name__ == "__main__":
     if args.restore:
         game.load()
     game.run()
+
+
+if __name__ == "__main__":
+    main()
