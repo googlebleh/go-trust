@@ -1,8 +1,7 @@
 ##
 # @file sync_file.py
-# @brief Implement syncinc of files over the internet.
+# @brief Implement syncing of files over the internet.
 # @author cwee
-
 
 import base64
 import urllib.request
