@@ -81,7 +81,8 @@ class BoardGame(Animation):
 
     def drawCellContents(self, row, col, bounds):
         (x0, y0, x1, y1) = bounds
-        self.canvas.create_rectangle(x0, y0, x1, y1, fill=self.cellBackgroundColor)
+        bgColor = self.getCellBackgroundColor(row, col)
+        self.canvas.create_rectangle(x0, y0, x1, y1, fill=bgColor)
         color = self.getCellColor(row, col)
         if (color != None):
             if (self.fillCellsWithCircles == True):
@@ -101,6 +102,9 @@ class BoardGame(Animation):
             return self.cellColors[value]
         else:
             raise Exception("Unknown board value: %r" % value)
+
+    def getCellBackgroundColor(self, row, col):
+        return self.cellBackgroundColor
 
     def isOnBoard(self, x, y):
         (boardX0, boardY0, boardX1, boardY1) = self.getBoardBounds()
@@ -180,6 +184,24 @@ class GoTrust(BoardGame):
     def cellClear(self, row, col):
         self.moves.append((0, row, col))
         super().cellClear(row, col)
+
+    ##
+    # @brief Last move for each player should have its cell background a
+    # slightly different color.
+    def getCellBackgroundColor(self, row, col):
+        coord = (row, col)
+
+        for player in range(1, self.totalPlayers + 1):
+            for move_player, move_row, move_col in reversed(self.moves):
+                move_coord = (move_row, move_col)
+
+                # last move this player made (account for moves undone)
+                if move_player == player == self.board[row][col]:
+                    if move_coord == coord:
+                        return "#ADFF2F"  # HTML greenyellow
+                    break
+
+        return super().getCellBackgroundColor(row, col)
 
     def keyPressed(self, event):
         if event.keysym == "s":
