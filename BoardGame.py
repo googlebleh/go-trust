@@ -196,7 +196,7 @@ class GoTrust(BoardGame):
                 move_coord = (move_row, move_col)
 
                 # last move this player made (account for moves undone)
-                if move_player == player == self.board[row][col]:
+                if move_player == player == self.board[move_row][move_col]:
                     if move_coord == coord:
                         return "#ADFF2F"  # HTML greenyellow
                     break
