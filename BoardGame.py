@@ -24,6 +24,36 @@ def make2dList(rows, cols):
     for row in range(rows): a += [[0]*cols]
     return a
 
+##
+# @details Layout is 3x3 grid.
+def popup():
+    top = Toplevel()
+    top.title("Go")
+
+    # row 0
+    msg = Message(top, aspect=1000, text="It's your move!", pady=10)
+    msg.grid(row=0, columnspan=3)
+
+    # row 1
+    msg = Message(top, aspect=1000, text="Remind me in", anchor=E)
+    msg.grid(row=1, column=0)
+
+    options = [15, 30, 60]
+    option = StringVar(top)
+    option.set(options[0])
+    w = OptionMenu(top, option, *options)
+    w.grid(row=1, column=1)
+
+    msg = Message(top, text="min", anchor=W)
+    msg.grid(row=1, column=2)
+
+    # row 2
+    button = Button(top, text="Ok", command=top.destroy)
+    button.grid(row=2, column=0, padx=10, pady=10)
+
+    button = Button(top, text="Remind me later")
+    button.grid(row=2, column=1, columnspan=2, padx=10, pady=10)
+
 ###########################################
 # BoardGame class
 ###########################################
@@ -208,6 +238,8 @@ class GoTrust(BoardGame):
             self.save()
         elif event.keysym == "m":
             self.print_moves()
+        elif event.keysym == "p":
+            popup()
 
     def print_moves(self):
         GoTrust.pp.pprint(self.moves)
