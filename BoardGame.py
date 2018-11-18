@@ -1,8 +1,12 @@
-# BoardGame.py
-
-# Somewhat incomplete BoardGame class.
-# For example, no way to win.  No score.  No reset.
-# Still, a practical example of inheritance!  :-)
+##
+# @file BoardGame.py
+# @brief Somewhat incomplete BoardGame class.
+# @author cwee
+#
+# @details For example, no way to win.  No score.  No reset.
+#          Still, a practical example of inheritance!  :-)
+# @bug When starting a new game, if Notifications=yes, game crashes 'cause
+#      there isn't a save file to check.
 
 import os
 import pickle
@@ -11,6 +15,7 @@ import random
 from argparse import ArgumentParser
 from configparser import ConfigParser
 from tkinter import *
+from threading import Timer
 
 from Animation import Animation
 from sync_file import WebDAVFsync
@@ -24,9 +29,10 @@ def make2dList(rows, cols):
     for row in range(rows): a += [[0]*cols]
     return a
 
+reminder_timer = None
 ##
 # @details Layout is 3x3 grid.
-def popup():
+def popup_reminder():
     top = Toplevel()
     top.title("Go")
 
@@ -38,7 +44,7 @@ def popup():
     msg = Message(top, aspect=1000, text="Remind me in", anchor=E)
     msg.grid(row=1, column=0)
 
-    options = [15, 30, 60]
+    options = (15, 30, 60, 0.25)
     option = StringVar(top)
     option.set(options[0])
     w = OptionMenu(top, option, *options)
@@ -51,7 +57,13 @@ def popup():
     button = Button(top, text="Ok", command=top.destroy)
     button.grid(row=2, column=0, padx=10, pady=10)
 
-    button = Button(top, text="Remind me later")
+    def remind_later():
+        delay = float(option.get()) * 60  # convert min to sec
+        global reminder_timer
+        reminder_timer = Timer(delay, popup_reminder)
+        reminder_timer.start()
+        top.destroy()
+    button = Button(top, text="Remind me later", command=remind_later)
     button.grid(row=2, column=1, columnspan=2, padx=10, pady=10)
 
 ###########################################
@@ -199,12 +211,13 @@ class GoTrust(BoardGame):
     backup_fname = "go_trust.pickle"
     pp = pprint.PrettyPrinter(compact=True)
 
-    def __init__(self, dimensions, title, url, user, pass_):
+    def __init__(self, dimensions, title, file_sync):
         rows, cols = dimensions
         cellSize = 30
         super(GoTrust, self).__init__(title, rows, cols, cellSize)
         self.moves = [] # list of tuple(player, row, col)
-        self.game_sync = WebDAVFsync(url, GoTrust.backup_fname, user, pass_)
+        self.game_sync = file_sync
+        self.thread = None
 
     def cellPressed(self, row, col):
         player = self.getCurrentPlayer()
@@ -238,8 +251,10 @@ class GoTrust(BoardGame):
             self.save()
         elif event.keysym == "m":
             self.print_moves()
-        elif event.keysym == "p":
-            popup()
+        elif event.keysym == "n":
+            self.popup_update(hash("test"))
+        elif event.keysym == "r":
+            popup_reminder()
 
     def print_moves(self):
         GoTrust.pp.pprint(self.moves)
@@ -284,6 +299,46 @@ class GoTrust(BoardGame):
         self.currentPlayer = last_player
         self.changePlayers()
 
+    ##
+    # @details Layout is 3x3 grid.
+    def popup_update(self, _):
+        top = Toplevel()
+        top.title("Go")
+
+        # row 0
+        msg_str = "Game state has changed!"
+        msg = Message(top, aspect=1000, text=msg_str, pady=10)
+        msg.grid(row=0, columnspan=3)
+
+        # row 1
+        msg = Message(top, aspect=1000, text="Remind me in", anchor=E)
+        msg.grid(row=1, column=0)
+
+        options = (15, 30, 60, 0.25)
+        option = StringVar(top)
+        option.set(options[0])
+        w = OptionMenu(top, option, *options)
+        w.grid(row=1, column=1)
+
+        msg = Message(top, text="min", anchor=W)
+        msg.grid(row=1, column=2)
+
+        # row 2
+        button_str = "Update local state"
+        def button_cmd():
+            self.load()
+            top.destroy()
+        button = Button(top, text=button_str, command=button_cmd)
+        button.grid(row=2, column=0, padx=10, pady=10)
+
+        def remind_later():
+            delay = float(option.get()) * 60  # convert min to sec
+            self.thread = Timer(delay, popup_reminder)
+            self.thread.start()
+            top.destroy()
+        button = Button(top, text="Remind me later", command=remind_later)
+        button.grid(row=2, column=1, columnspan=2, padx=10, pady=10)
+
 def getargs():
     ap = ArgumentParser("A Barebones Go game")
     ap.add_argument("--config", default="config.ini",
@@ -299,21 +354,28 @@ def main():
     cfg = ConfigParser()
     cfg.read(args.config)
 
-    sync_url = cfg["sync"]["URL"]
-    sync_user = cfg["sync"]["Username"]
-    sync_pass = cfg["sync"]["Password"]
-
-    game = GoTrust(
-        dimensions=(13, 13),
-        title="Go",
-        url=sync_url,
-        user=sync_user,
-        pass_=sync_pass,
+    dav_sync = WebDAVFsync(
+        cfg["sync"]["URL"],
+        GoTrust.backup_fname,
+        cfg["sync"]["Username"],
+        cfg["sync"]["Password"],
+        cfg["sync"].getfloat("Interval"),
     )
+    game = GoTrust(dimensions=(13, 13), title="Go", file_sync=dav_sync)
+
+    if cfg["sync"].getboolean("Notifications"):
+        dav_sync.set_callback(game.popup_update)
 
     if args.restore:
         game.load()
+
     game.run()
+    if reminder_timer is not None:
+        reminder_timer.cancel()
+    if game.thread is not None:
+        game.thread.cancel()
+    if dav_sync.thread is not None:
+        dav_sync.thread.cancel()
 
 
 if __name__ == "__main__":
