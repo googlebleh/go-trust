@@ -80,3 +80,7 @@ class WebDAVFsync:
 
         self.thread = Timer(interval, lambda: self.continuous_sync(interval))
         self.thread.start()
+
+    def stop(self):
+        if self.thread is not None:
+            self.thread.cancel()

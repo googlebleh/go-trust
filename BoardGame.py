@@ -29,43 +29,6 @@ def make2dList(rows, cols):
     for row in range(rows): a += [[0]*cols]
     return a
 
-reminder_timer = None
-##
-# @details Layout is 3x3 grid.
-def popup_reminder():
-    top = Toplevel()
-    top.title("Go")
-
-    # row 0
-    msg = Message(top, aspect=1000, text="It's your move!", pady=10)
-    msg.grid(row=0, columnspan=3)
-
-    # row 1
-    msg = Message(top, aspect=1000, text="Remind me in", anchor=E)
-    msg.grid(row=1, column=0)
-
-    options = (15, 30, 60, 0.25)
-    option = StringVar(top)
-    option.set(options[0])
-    w = OptionMenu(top, option, *options)
-    w.grid(row=1, column=1)
-
-    msg = Message(top, text="min", anchor=W)
-    msg.grid(row=1, column=2)
-
-    # row 2
-    button = Button(top, text="Ok", command=top.destroy)
-    button.grid(row=2, column=0, padx=10, pady=10)
-
-    def remind_later():
-        delay = float(option.get()) * 60  # convert min to sec
-        global reminder_timer
-        reminder_timer = Timer(delay, popup_reminder)
-        reminder_timer.start()
-        top.destroy()
-    button = Button(top, text="Remind me later", command=remind_later)
-    button.grid(row=2, column=1, columnspan=2, padx=10, pady=10)
-
 ###########################################
 # BoardGame class
 ###########################################
@@ -253,8 +216,6 @@ class GoTrust(BoardGame):
             self.print_moves()
         elif event.keysym == "n":
             self.popup_update(hash("test"))
-        elif event.keysym == "r":
-            popup_reminder()
 
     def print_moves(self):
         GoTrust.pp.pprint(self.moves)
@@ -301,7 +262,7 @@ class GoTrust(BoardGame):
 
     ##
     # @details Layout is 3x3 grid.
-    def popup_update(self, _):
+    def popup_update(self, new_state):
         top = Toplevel()
         top.title("Go")
 
@@ -314,30 +275,33 @@ class GoTrust(BoardGame):
         msg = Message(top, aspect=1000, text="Remind me in", anchor=E)
         msg.grid(row=1, column=0)
 
-        options = (15, 30, 60, 0.25)
-        option = StringVar(top)
-        option.set(options[0])
-        w = OptionMenu(top, option, *options)
+        snooze_options = (15, 30, 60)
+        selected = StringVar(top)
+        selected.set(snooze_options[0])
+        w = OptionMenu(top, selected, *snooze_options)
         w.grid(row=1, column=1)
 
         msg = Message(top, text="min", anchor=W)
         msg.grid(row=1, column=2)
 
         # row 2
-        button_str = "Update local state"
-        def button_cmd():
+        def update():
             self.load()
             top.destroy()
-        button = Button(top, text=button_str, command=button_cmd)
+        button = Button(top, text="Update local state", command=update)
         button.grid(row=2, column=0, padx=10, pady=10)
 
         def remind_later():
-            delay = float(option.get()) * 60  # convert min to sec
-            self.thread = Timer(delay, popup_reminder)
+            delay = float(selected.get()) * 60  # convert min to sec
+            self.thread = Timer(delay, lambda: self.popup_update(new_state))
             self.thread.start()
             top.destroy()
         button = Button(top, text="Remind me later", command=remind_later)
         button.grid(row=2, column=1, columnspan=2, padx=10, pady=10)
+
+    def exit(self):
+        if self.thread is not None:
+            self.thread.cancel()
 
 def getargs():
     ap = ArgumentParser("A Barebones Go game")
@@ -368,14 +332,10 @@ def main():
 
     if args.restore:
         game.load()
-
     game.run()
-    if reminder_timer is not None:
-        reminder_timer.cancel()
-    if game.thread is not None:
-        game.thread.cancel()
-    if dav_sync.thread is not None:
-        dav_sync.thread.cancel()
+
+    game.exit()
+    dav_sync.stop()
 
 
 if __name__ == "__main__":
