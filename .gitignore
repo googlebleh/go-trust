@@ -2,7 +2,7 @@
 tags
 
 # vim
-.swp
+*.swp
 
 # game files
 config.ini
